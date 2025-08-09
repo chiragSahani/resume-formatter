@@ -18,6 +18,11 @@ export default function App() {
     setCvData(data);
   };
 
+  const handleUploadNew = () => {
+    setCvData(null);
+    setOriginalText(''); // Clear original text as well
+  };
+
   return (
     <>
       <Header cvData={cvData} />
@@ -25,7 +30,11 @@ export default function App() {
         {!cvData ? (
           <FileUpload onFileProcessed={handleFileProcessed} />
         ) : (
-          <CVPreview cvData={cvData} originalText={originalText} />
+          <CVPreview 
+            cvData={cvData} 
+            originalText={originalText} 
+            onUploadNew={handleUploadNew} 
+          />
         )}
       </main>
     </>

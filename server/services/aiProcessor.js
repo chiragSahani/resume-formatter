@@ -150,4 +150,4 @@ async function parseAndFormatCV(file) {
   return formattedCV;
 }
 
-module.exports = { parseAndFormatCV };
+module.exports = { parseAndFormatCV, extractText };

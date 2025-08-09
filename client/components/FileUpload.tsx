@@ -7,7 +7,7 @@ import { Upload, FileText, X, AlertCircle, Loader2 } from 'lucide-react';
 import { CVData } from '@/types/cv';
 
 interface FileUploadProps {
-  onFileProcessed: (cvData: CVData) => void;
+  onFileProcessed: (cvData: CVData, originalText?: string) => void;
 }
 
 export default function FileUpload({ onFileProcessed }: FileUploadProps) {
@@ -60,7 +60,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       }
 
       const data = await res.json();
-      onFileProcessed(data);
+      onFileProcessed(data.cvData, data.originalText);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Upload failed. Please try again.');
@@ -76,78 +76,83 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div
+      <motion.div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300
+          relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-500 ease-out
+          bg-gradient-to-br from-slate-50 to-white shadow-lg hover:shadow-xl
           ${isDragActive 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50'
+            ? 'border-blue-500 bg-blue-50' 
+            : 'border-slate-300 hover:border-blue-400'
           }
         `}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
       >
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <input {...getInputProps()} />
-        
-          <div className="space-y-4">
-            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center transition-colors
-              ${isDragActive ? 'bg-blue-100' : 'bg-slate-100'}`}>
-              <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-600' : 'text-slate-600'}`} />
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                {isDragActive ? 'Drop your CV here' : 'Upload your CV'}
-              </h3>
-              <p className="text-slate-600 mb-4">
-                Drag and drop your file here, or click to select
-              </p>
-              <p className="text-sm text-slate-500">
-                Supports PDF, DOCX • Max size: 10MB
-              </p>
-            </div>
+        <input {...getInputProps()} />
+      
+        <div className="space-y-6">
+          <motion.div
+            className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300
+              ${isDragActive ? 'bg-blue-100' : 'bg-slate-100'}`}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          >
+            <Upload className={`h-10 w-10 ${isDragActive ? 'text-blue-600' : 'text-slate-600'}`} />
+          </motion.div>
+          
+          <div>
+            <h3 className="text-2xl font-extrabold text-slate-800 mb-2">
+              {isDragActive ? 'Drop your CV here!' : 'Upload Your CV with AI'}
+            </h3>
+            <p className="text-slate-600 mb-4 text-lg">
+              Drag & drop your file, or click to browse
+            </p>
+            <p className="text-sm text-slate-500">
+              Supports PDF, DOCX • Max size: 10MB
+            </p>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2"
+          className="mt-6 p-5 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-3 shadow-md"
         >
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-          <p className="text-red-700 text-sm">{error}</p>
+          <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+          <p className="text-red-700 text-base font-medium">{error}</p>
         </motion.div>
       )}
 
       {selectedFile && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 p-4 bg-white border border-slate-200 rounded-lg"
+          className="mt-8 p-6 bg-white border border-slate-200 rounded-2xl shadow-xl"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded">
-                <FileText className="h-5 w-5 text-blue-600" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="font-medium text-slate-800">{selectedFile.name}</p>
+                <p className="font-bold text-lg text-slate-800">{selectedFile.name}</p>
                 <p className="text-sm text-slate-600">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
-            <button
+            <motion.button
               onClick={removeFile}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <X className="h-5 w-5 text-slate-600" />
-            </button>
+              <X className="h-6 w-6 text-slate-600" />
+            </motion.button>
           </div>
           
           <motion.button
@@ -155,12 +160,14 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
             whileTap={{ scale: 0.98 }}
             onClick={handleUpload}
             disabled={isUploading}
-            className="w-full mt-4 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+            className="w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300
+                       bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:from-blue-700 hover:to-blue-800
+                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Processing...</span>
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Processing with AI...</span>
               </>
             ) : (
               <span>Process CV with AI</span>

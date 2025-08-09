@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const multer = require('multer');
-const { parseAndFormatCV } = require('../services/aiProcessor');
+const { parseAndFormatCV, extractText } = require('../services/aiProcessor');
 const CVModel = require('../models/CVModel');
 const { Document, Packer, Paragraph, TextRun } = require('docx');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
@@ -18,13 +18,20 @@ router.post('/upload', upload.single('cv'), async (req, res) => {
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // We need a copy of the file object because extractText deletes the file
+    const fileForTextExtraction = { ...file };
+
+    const originalText = await extractText(fileForTextExtraction);
     const formattedData = await parseAndFormatCV(file);
+
     const newCV = new CVModel({
       originalFileName: file.originalname,
       ...formattedData
     });
     await newCV.save();
-    res.json(newCV);
+
+    res.json({ cvData: newCV, originalText });
   } catch (err) {
     console.error('Upload Error:', err);
     res.status(500).json({ error: err.message || 'Server error' });

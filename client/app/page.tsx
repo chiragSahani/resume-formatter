@@ -1,23 +1,38 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { CVData } from '@/types/cv';
 import FileUpload from '@/components/FileUpload';
-import Header from '@/components/Header'; // Assuming Header is a general layout component
+import CVPreview from '@/components/CVPreview';
+import Header from '@/components/Header';
 
-export default function UploadPage() {
-  const router = useRouter();
+export default function HomePage() {
+  const [cvData, setCvData] = useState<CVData | null>(null);
+  const [originalText, setOriginalText] = useState<string | undefined>(undefined);
 
-  const handleFileProcessed = (data: CVData) => {
-    // After upload, redirect to the new dynamic page for preview
-    router.push(`/cv/${data._id}`);
+  const handleFileProcessed = (data: CVData, text?: string) => {
+    setCvData(data);
+    setOriginalText(text);
+  };
+
+  const handleUploadNew = () => {
+    setCvData(null);
+    setOriginalText(undefined);
   };
 
   return (
     <>
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <FileUpload onFileProcessed={handleFileProcessed} />
+        {cvData ? (
+          <CVPreview 
+            cvData={cvData} 
+            originalText={originalText}
+            onUploadNew={handleUploadNew}
+          />
+        ) : (
+          <FileUpload onFileProcessed={handleFileProcessed} />
+        )}
       </main>
     </>
   );
