@@ -29,7 +29,7 @@ export default function Header({ cvData }: HeaderProps) {
             </div>
           </div>
           
-          {cvData && (
+          {cvData && cvData.header && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

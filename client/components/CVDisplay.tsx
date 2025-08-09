@@ -45,16 +45,20 @@ const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, 
   return (
     <Card ref={ref} className="max-w-4xl mx-auto p-8 shadow-lg">
       <CardHeader className="text-center p-0 border-b pb-6 mb-8">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <CardTitle className="text-5xl font-extrabold text-slate-900">{header.name}</CardTitle>
-          <p className="text-2xl text-blue-600 font-medium mt-2">{header.title}</p>
-        </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center items-center space-x-6 text-slate-600 mt-4">
-          {header.email && <a href={`mailto:${header.email}`} className="flex items-center space-x-2 hover:text-blue-500"><Mail size={16} /><span>{header.email}</span></a>}
-          {header.phone && <span className="flex items-center space-x-2"><Phone size={16} /><span>{header.phone}</span></span>}
-          {header.linkedin && <a href={header.linkedin} className="flex items-center space-x-2 hover:text-blue-500"><Linkedin size={16} /><span>LinkedIn</span></a>}
-          {header.website && <a href={header.website} className="flex items-center space-x-2 hover:text-blue-500"><Globe size={16} /><span>Website</span></a>}
-        </motion.div>
+        {header && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <CardTitle className="text-5xl font-extrabold text-slate-900">{header.name}</CardTitle>
+            <p className="text-2xl text-blue-600 font-medium mt-2">{header.title}</p>
+          </motion.div>
+        )}
+        {header && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center items-center space-x-6 text-slate-600 mt-4">
+            {header.email && <a href={`mailto:${header.email}`} className="flex items-center space-x-2 hover:text-blue-500"><Mail size={16} /><span>{header.email}</span></a>}
+            {header.phone && <span className="flex items-center space-x-2"><Phone size={16} /><span>{header.phone}</span></span>}
+            {header.linkedin && <a href={header.linkedin} className="flex items-center space-x-2 hover:text-blue-500"><Linkedin size={16} /><span>LinkedIn</span></a>}
+            {header.website && <a href={header.website} className="flex items-center space-x-2 hover:text-blue-500"><Globe size={16} /><span>Website</span></a>}
+          </motion.div>
+        )}
       </CardHeader>
 
       <CardContent className="p-0">

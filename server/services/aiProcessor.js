@@ -45,58 +45,36 @@ async function extractText(file) {
  */
 async function formatWithAI(text) {
   const prompt = `
-You are an expert CV parser for an elite household staffing agency. Your task is to extract information from a raw CV and convert it into a structured JSON object that matches our agency's specific format.
+You are a professional CV formatter. Given the following unstructured CV content, convert it into a structured JSON object.
 
-Follow these rules precisely:
-1.  **Personal Details:** Extract personal details such as Nationality, Date of Birth, Marital Status, and Driving Licence status. These are required for our agency's format. If they are not present, use null.
-2.  **Dates:** Format all start and end dates as "Mon YYYY" (e.g., "Jun 2023", "Apr 2022"). The value "Present" should remain "Present".
-3.  **Experience:**
-    - If a role is described as "Freelance" or "Self-Employed" for "Private Clients", set the company to "Various Private Clients" and the location to "Europe / Middle East" or the most relevant region mentioned.
-    - Responsibilities should be an array of strings. Each string must be a concise, action-oriented sentence. Do not use bullet points in the output strings.
-4.  **Skills:** The 'Skills' section should be a list of key skills. Convert any paragraphs describing skills into distinct string values in an array. Omit generic skills like "Problem Solving under pressure" if they are described as part of a list, but keep them if they are explicitly listed.
-5.  **Contact Info:** Extract email and phone, but place them in a separate 'contact' object. Do not include a physical address.
-6.  **JSON Structure:** The final JSON object MUST conform strictly to the structure defined below. Do not add extra fields or deviate from this schema.
-
-The JSON object must conform to this exact structure:
+The JSON object should conform to this structure:
 {
-  "personalDetails": {
+  "header": {
     "name": "string",
     "title": "string",
-    "nationality": "string | null",
-    "dateOfBirth": "string | null",
-    "maritalStatus": "string | null",
-    "drivingLicence": "boolean | null"
-  },
-  "contact": {
-    "email": "string | null",
-    "phone": "string | null"
+    "email": "string",
+    "phone": "string",
+    "linkedin": "string",
+    "website": "string"
   },
   "summary": "string",
   "experience": [
     {
+      "title": "string",
+      "company": "string",
       "startDate": "string",
       "endDate": "string",
-      "company": "string",
-      "location": "string",
-      "title": "string",
       "responsibilities": ["string"]
     }
   ],
   "education": [
     {
-      "date": "string",
+      "degree": "string",
       "institution": "string",
-      "degree": "string"
+      "year": "string"
     }
   ],
-  "languages": [
-    {
-      "language": "string",
-      "proficiency": "string"
-    }
-  ],
-  "keySkills": ["string"],
-  "interests": ["string"]
+  "skills": ["string"]
 }
 
 CV Input:
@@ -104,6 +82,7 @@ ${text}
 
 Formatted JSON:
 `;
+
   const response = await fetch(GEMINI_API_URL, {
     method: 'POST',
     headers: {

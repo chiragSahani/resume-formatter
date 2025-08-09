@@ -72,10 +72,14 @@ export default function CVPreview({ cvData: initialCvData, originalText }: CVPre
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div>
+            {cvData.header && (
             <h2 className="text-2xl font-bold text-slate-800">
               {cvData.header.name}
             </h2>
+          )}
+          {cvData.header && (
             <p className="text-slate-600">{cvData.header.title}</p>
+          )}
           </div>
           
           <div className="flex items-center space-x-3">
