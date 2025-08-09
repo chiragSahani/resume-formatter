@@ -5,6 +5,9 @@ import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { Upload, FileText, X, AlertCircle, Loader2 } from 'lucide-react';
 import { CVData } from '@/types/cv';
+import { api, ApiError } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import LoadingState from './LoadingState';
 
 interface FileUploadProps {
   onFileProcessed: (cvData: CVData, originalText?: string) => void;
@@ -14,6 +17,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     setError(null);
@@ -46,24 +50,25 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('cv', selectedFile);
-
-      const res = await fetch('https://resume-formatter-7rc4.onrender.com/api/cv/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to upload CV');
-      }
-
-      const data = await res.json();
+      const data = await api.uploadCV(selectedFile);
       onFileProcessed(data.cvData, data.originalText);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Upload failed. Please try again.');
+      
+      toast({
+        title: 'Success!',
+        description: 'Your CV has been processed successfully.',
+      });
+    } catch (err) {
+      console.error('Upload error:', err);
+      const errorMessage = err instanceof ApiError 
+        ? err.message 
+        : 'Upload failed. Please try again.';
+      
+      setError(errorMessage);
+      toast({
+        title: 'Upload Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setIsUploading(false);
     }
@@ -165,10 +170,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
           >
             {isUploading ? (
-              <>
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Processing with AI...</span>
-              </>
+              <LoadingState message="Processing with AI..." submessage="Analyzing your CV content..." />
             ) : (
               <span>Process CV with AI</span>
             )}

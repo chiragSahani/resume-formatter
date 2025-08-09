@@ -5,6 +5,7 @@ import { CVData } from '@/types/cv';
 import FileUpload from '@/components/FileUpload';
 import CVPreview from '@/components/CVPreview';
 import Header from '@/components/Header';
+import ApiStatus from '@/components/ApiStatus';
 
 export default function HomePage() {
   const [cvData, setCvData] = useState<CVData | null>(null);
@@ -23,6 +24,7 @@ export default function HomePage() {
   return (
     <>
       <Header />
+      <ApiStatus />
       <main className="container mx-auto px-4 py-8">
         {cvData ? (
           <CVPreview 

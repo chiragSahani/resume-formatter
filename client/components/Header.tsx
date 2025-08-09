@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Sparkles, User, Briefcase } from 'lucide-react';
+import { FileText, Sparkles, User, Briefcase, Globe } from 'lucide-react';
 import { CVData } from '@/types/cv';
 
 interface HeaderProps {
@@ -50,6 +50,17 @@ export default function Header({ cvData }: HeaderProps) {
             </div>
           </motion.div>
         )}
+        
+        {/* Status indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="hidden lg:flex items-center space-x-2 text-blue-200 text-sm"
+        >
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span>Backend Connected</span>
+        </motion.div>
       </div>
     </motion.header>
   );

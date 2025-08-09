@@ -6,6 +6,7 @@ import { X, Download, Loader2, FileText, FileType, FileJson } from 'lucide-react
 import { CVData } from '@/types/cv';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
+import { api, ApiError } from '@/lib/api';
 
 interface ExportCVProps {
   cvData: CVData;
@@ -39,44 +40,34 @@ export default function ExportCV({ cvData, onClose, onVisualExport }: ExportCVPr
     }
 
     setIsExporting(format);
+    const filename = `${cvData.header.name.replace(/\s+/g, '_')}_CV.${format === 'txt' ? 'txt' : format}`;
+    
     try {
-      const { endpoint } = formatConfig[format];
-      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${cvData._id}/${endpoint}`);
-
-      if (!res.ok) {
-        let errorDetails = `Server responded with status ${res.status}`;
-        const errorText = await res.text();
-        try {
-          const errorData = JSON.parse(errorText);
-          errorDetails = errorData.message || errorData.error || JSON.stringify(errorData);
-        } catch (e) {
-          if (errorText) {
-            errorDetails = errorText;
-          }
-        }
-        throw new Error(errorDetails);
+      switch (format) {
+        case 'pdf':
+          await api.exportCVAsPdf(cvData._id, filename);
+          break;
+        case 'docx':
+          await api.exportCVAsDocx(cvData._id, filename);
+          break;
+        case 'txt':
+          await api.exportCVAsText(cvData._id, filename);
+          break;
       }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${cvData.header.name.replace(/\s+/g, '_')}_CV.${format === 'txt' ? 'json' : format}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
 
       toast({
         title: 'Export Successful',
         description: `Your CV has been exported as a ${format.toUpperCase()} file.`,
       });
-    } catch (error) {
-      console.error(error);
-      const description = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
+    } catch (err) {
+      console.error('Export error:', err);
+      const errorMessage = err instanceof ApiError 
+        ? err.message 
+        : 'An unexpected error occurred. Please try again.';
+      
       toast({
         title: 'Export Failed',
-        description: `Could not export as ${format.toUpperCase()}. ${description}`,
+        description: `Could not export as ${format.toUpperCase()}. ${errorMessage}`,
         variant: 'destructive',
       });
     } finally {

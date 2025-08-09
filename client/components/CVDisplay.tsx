@@ -37,7 +37,12 @@ const EducationItem = ({ item }: { item: any }) => (
 
 const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, ref) => {
   if (!cvData) {
-    return <p className="text-center text-red-500">No CV data to display.</p>;
+    return (
+      <div className="text-center py-12">
+        <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+        <p className="text-slate-500">No CV data to display.</p>
+      </div>
+    );
   }
 
   const { header, summary, experience, education, skills } = cvData;
@@ -49,12 +54,17 @@ const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, 
           <CardTitle className="text-5xl font-extrabold text-slate-900">{header.name}</CardTitle>
           <p className="text-2xl text-blue-600 font-medium mt-2">{header.title}</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center items-center space-x-6 text-slate-600 mt-4">
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ delay: 0.1 }} 
+          className="flex flex-wrap justify-center items-center gap-4 text-slate-600 mt-4"
+        >
           {header.email && <a href={`mailto:${header.email}`} className="flex items-center space-x-2 hover:text-blue-500"><Mail size={16} /><span>{header.email}</span></a>}
           {header.phone && <span className="flex items-center space-x-2"><Phone size={16} /><span>{header.phone}</span></span>}
           {header.linkedin && <a href={header.linkedin} className="flex items-center space-x-2 hover:text-blue-500"><Linkedin size={16} /><span>LinkedIn</span></a>}
           {header.website && <a href={header.website} className="flex items-center space-x-2 hover:text-blue-500"><Globe size={16} /><span>Website</span></a>}
-          </motion.div>
+        </motion.div>
       </CardHeader>
 
       <CardContent className="p-0">

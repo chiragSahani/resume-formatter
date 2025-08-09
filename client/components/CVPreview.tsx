@@ -11,6 +11,7 @@ import CVTabs, { Tab } from './CVTabs';
 import OriginalTextView from './OriginalTextView';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useToast } from '@/hooks/use-toast';
 
 interface CVPreviewProps {
   cvData: CVData;
@@ -22,6 +23,7 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
   const [cvData, setCvData] = useState<CVData>(initialCvData);
   const [activeTab, setActiveTab] = useState<Tab>('preview');
   const [showExport, setShowExport] = useState(false);
+  const { toast } = useToast();
 
   const cvDisplayRef = useRef<HTMLDivElement>(null);
 
@@ -33,27 +35,53 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
   const handleVisualPdfExport = async () => {
     if (cvDisplayRef.current) {
       setShowExport(false);
-      const input = cvDisplayRef.current;
-      const canvas = await html2canvas(input, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
+      
+      try {
+        toast({
+          title: 'Generating PDF...',
+          description: 'Please wait while we create your visual PDF.',
+        });
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+        const input = cvDisplayRef.current;
+        const canvas = await html2canvas(input, { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/png');
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        pdf.save(`${cvData.header.name.replace(/\s+/g, '_')}_Visual_CV.pdf`);
+        
+        toast({
+          title: 'Success!',
+          description: 'Your visual PDF has been downloaded.',
+        });
+      } catch (error) {
+        console.error('Visual PDF export error:', error);
+        toast({
+          title: 'Export Failed',
+          description: 'Failed to generate visual PDF. Please try again.',
+          variant: 'destructive',
+        });
       }
-      pdf.save(`${cvData.header.name.replace(/\s+/g, '_')}_Visual_CV.pdf`);
     }
   };
 

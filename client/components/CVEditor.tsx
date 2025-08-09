@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { Trash2 } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface CVEditorProps {
   cvData: CVData;
@@ -14,6 +16,8 @@ interface CVEditorProps {
 
 export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
   const [editedCV, setEditedCV] = useState<CVData>(cvData);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -113,23 +117,27 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
     setEditedCV(prev => ({ ...prev, skills: newSkills }));
   };
 
-  const [saving, setSaving] = useState(false);
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${editedCV._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editedCV),
-      });
-      if (!res.ok) throw new Error('Failed to save CV');
-      const updatedData = await res.json();
+      const updatedData = await api.updateCV(editedCV._id, editedCV);
       onUpdateCV(updatedData);
-      alert('CV saved successfully!');
+      
+      toast({
+        title: 'Success!',
+        description: 'Your CV has been saved successfully.',
+      });
     } catch (err) {
-      console.error('Error saving CV:', err);
-      alert('Error saving CV.');
+      console.error('Save error:', err);
+      const errorMessage = err instanceof ApiError 
+        ? err.message 
+        : 'Failed to save CV. Please try again.';
+      
+      toast({
+        title: 'Save Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -209,7 +217,9 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
         <Button onClick={addSkill} className="mt-2">Add Skill</Button>
       </div>
 
-      <Button onClick={handleSave} size="lg" className="w-full">Save Changes</Button>
+      <Button onClick={handleSave} size="lg" className="w-full" disabled={saving}>
+        {saving ? 'Saving...' : 'Save Changes'}
+      </Button>
     </div>
   );
 }
