@@ -25,7 +25,7 @@ export default function App() {
         {!cvData ? (
           <FileUpload onFileProcessed={handleFileProcessed} />
         ) : (
-          <CVPreview cvData={cvData} originalText={originalText} onUpdateCV={handleUpdateCV} />
+          <CVPreview cvData={cvData} originalText={originalText} />
         )}
       </main>
     </>

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { motion } from 'framer-motion';
 import { CVData } from '@/types/cv';
 import { Card, CardHeader, CardContent, CardTitle } from './ui/card';
@@ -34,7 +35,7 @@ const EducationItem = ({ item }: { item: any }) => (
   </div>
 );
 
-export default function CVDisplay({ cvData }: CVDisplayProps) {
+const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, ref) => {
   if (!cvData) {
     return <p className="text-center text-red-500">No CV data to display.</p>;
   }
@@ -42,7 +43,7 @@ export default function CVDisplay({ cvData }: CVDisplayProps) {
   const { header, summary, experience, education, skills } = cvData;
 
   return (
-    <Card className="max-w-4xl mx-auto p-8 shadow-lg">
+    <Card ref={ref} className="max-w-4xl mx-auto p-8 shadow-lg">
       <CardHeader className="text-center p-0 border-b pb-6 mb-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <CardTitle className="text-5xl font-extrabold text-slate-900">{header.name}</CardTitle>
@@ -83,4 +84,6 @@ export default function CVDisplay({ cvData }: CVDisplayProps) {
       </CardContent>
     </Card>
   );
-}
+});
+
+export default CVDisplay;

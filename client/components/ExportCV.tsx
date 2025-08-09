@@ -10,6 +10,7 @@ import { Button } from './ui/button';
 interface ExportCVProps {
   cvData: CVData;
   onClose: () => void;
+  onVisualExport: () => void; // New prop for visual export
 }
 
 type ExportFormat = 'pdf' | 'docx' | 'txt';
@@ -23,7 +24,7 @@ const formatConfig: Record<
   txt: { icon: FileJson, endpoint: 'export' },
 };
 
-export default function ExportCV({ cvData, onClose }: ExportCVProps) {
+export default function ExportCV({ cvData, onClose, onVisualExport }: ExportCVProps) { // Added onVisualExport
   const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
   const { toast } = useToast();
 
@@ -40,7 +41,7 @@ export default function ExportCV({ cvData, onClose }: ExportCVProps) {
     setIsExporting(format);
     try {
       const { endpoint } = formatConfig[format];
-      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${cvData._id}/${endpoint}`); // Changed URL
+      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${cvData._id}/${endpoint}`);
 
       if (!res.ok) {
         let errorDetails = `Server responded with status ${res.status}`;
@@ -128,6 +129,17 @@ export default function ExportCV({ cvData, onClose }: ExportCVProps) {
                 </motion.button>
               );
             })}
+            {/* New button for visual PDF export */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onVisualExport} // Call the new prop
+              disabled={!!isExporting}
+              className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-60 flex items-center justify-center space-x-3"
+            >
+              <Download className="h-5 w-5" />
+              <span>Export Visual PDF</span>
+            </motion.button>
           </div>
         </motion.div>
       </div>

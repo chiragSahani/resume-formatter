@@ -76,10 +76,8 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <motion.div
+      <div
         {...getRootProps()}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
         className={`
           border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300
           ${isDragActive 
@@ -88,27 +86,32 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
           }
         `}
       >
-        <input {...getInputProps()} />
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <input {...getInputProps()} />
         
-        <div className="space-y-4">
-          <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center transition-colors
-            ${isDragActive ? 'bg-blue-100' : 'bg-slate-100'}`}>
-            <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-600' : 'text-slate-600'}`} />
+          <div className="space-y-4">
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center transition-colors
+              ${isDragActive ? 'bg-blue-100' : 'bg-slate-100'}`}>
+              <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-600' : 'text-slate-600'}`} />
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                {isDragActive ? 'Drop your CV here' : 'Upload your CV'}
+              </h3>
+              <p className="text-slate-600 mb-4">
+                Drag and drop your file here, or click to select
+              </p>
+              <p className="text-sm text-slate-500">
+                Supports PDF, DOCX • Max size: 10MB
+              </p>
+            </div>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">
-              {isDragActive ? 'Drop your CV here' : 'Upload your CV'}
-            </h3>
-            <p className="text-slate-600 mb-4">
-              Drag and drop your file here, or click to select
-            </p>
-            <p className="text-sm text-slate-500">
-              Supports PDF, DOCX • Max size: 10MB
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {error && (
         <motion.div

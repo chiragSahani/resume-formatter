@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react'; // Added useRef
 import { motion } from 'framer-motion';
 import { Eye, Edit3, Download, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -9,19 +9,23 @@ import CVEditor from './CVEditor';
 import CVDisplay from './CVDisplay';
 import ExportCV from './ExportCV';
 
+// Import html2canvas and jspdf
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 interface CVPreviewProps {
-  cvData?: CVData;
+  cvData: CVData; // No longer optional, always passed from server component
   originalText?: string;
-  onUpdateCV?: (data: CVData) => void;
 }
 
-export default function CVPreview({ cvData: propCvData, originalText: propOriginalText, onUpdateCV }: CVPreviewProps) {
+export default function CVPreview({ cvData: initialCvData, originalText }: CVPreviewProps) {
   const router = useRouter();
   
-  const [cvData, setCvData] = useState<CVData | null>(null);
-  const [originalText, setOriginalText] = useState<string>('');
+  const [cvData, setCvData] = useState<CVData>(initialCvData);
   const [activeTab, setActiveTab] = useState<'preview' | 'edit' | 'original'>('preview');
   const [showExport, setShowExport] = useState(false);
+
+  const cvDisplayRef = useRef<HTMLDivElement>(null); // Ref for CVDisplay component
 
   const tabs = [
     { id: 'original', label: 'Original Text', icon: Eye },
@@ -29,38 +33,38 @@ export default function CVPreview({ cvData: propCvData, originalText: propOrigin
     { id: 'edit', label: 'Edit CV', icon: Edit3 },
   ] as const;
 
-  // Load data from props or localStorage
-  useEffect(() => {
-    if (propCvData) {
-      setCvData(propCvData);
-      localStorage.setItem('cvData', JSON.stringify(propCvData));
-    } else {
-      const savedData = localStorage.getItem('cvData');
-      if (savedData) setCvData(JSON.parse(savedData));
-    }
+  const handleUpdateCV = (updatedData: CVData) => {
+    setCvData(updatedData);
+  };
 
-    if (propOriginalText) {
-      setOriginalText(propOriginalText);
-      localStorage.setItem('originalText', propOriginalText);
-    } else {
-      const savedText = localStorage.getItem('originalText');
-      if (savedText) setOriginalText(savedText);
-    }
-  }, [propCvData, propOriginalText]);
+  // Function to handle visual PDF export
+  const handleVisualPdfExport = async () => {
+    if (cvDisplayRef.current) {
+      setShowExport(false); // Close the export modal
+      const input = cvDisplayRef.current;
+      const canvas = await html2canvas(input, { scale: 2 }); // Scale for better quality
+      const imgData = canvas.toDataURL('image/png');
 
-  if (!cvData) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-slate-600">No CV data found. Please upload your CV again.</p>
-        <button
-          onClick={() => router.push('/')}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
-        >
-          Go Back
-        </button>
-      </div>
-    );
-  }
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save(`${cvData.header.name.replace(/\s+/g, '_')}_Visual_CV.pdf`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -140,15 +144,11 @@ export default function CVPreview({ cvData: propCvData, originalText: propOrigin
             )}
 
             {activeTab === 'preview' && (
-              <CVDisplay cvData={cvData} />
+              <CVDisplay cvData={cvData} ref={cvDisplayRef} />
             )}
 
             {activeTab === 'edit' && (
-              <CVEditor cvData={cvData} onUpdateCV={(updatedData) => {
-                setCvData(updatedData);
-                localStorage.setItem('cvData', JSON.stringify(updatedData));
-                onUpdateCV?.(updatedData);
-              }} />
+              <CVEditor cvData={cvData} onUpdateCV={handleUpdateCV} />
             )}
           </motion.div>
         </div>
@@ -159,6 +159,7 @@ export default function CVPreview({ cvData: propCvData, originalText: propOrigin
         <ExportCV
           cvData={cvData}
           onClose={() => setShowExport(false)}
+          onVisualExport={handleVisualPdfExport} // Pass the new handler
         />
       )}
     </div>
