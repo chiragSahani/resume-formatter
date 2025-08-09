@@ -23,6 +23,13 @@ const EducationItemSchema = new mongoose.Schema({
   year: String,
 });
 
+const PersonalDetailsSchema = new mongoose.Schema({
+  nationality: String,
+  languages: String,
+  dob: String,
+  maritalStatus: String,
+});
+
 const CVSchema = new mongoose.Schema({
   originalFileName: String,
   header: HeaderSchema,
@@ -30,6 +37,8 @@ const CVSchema = new mongoose.Schema({
   experience: [ExperienceItemSchema],
   education: [EducationItemSchema],
   skills: [String],
+  interests: [String],
+  personalDetails: PersonalDetailsSchema,
   uploadDate: { type: Date, default: Date.now },
 });
 
