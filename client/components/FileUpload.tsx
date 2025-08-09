@@ -49,7 +49,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       const formData = new FormData();
       formData.append('cv', selectedFile);
 
-      const res = await fetch('http://localhost:5000/api/cv/upload', {
+      const res = await fetch('https://resume-formatter-7rc4.onrender.com/api/cv/upload', {
         method: 'POST',
         body: formData,
       });

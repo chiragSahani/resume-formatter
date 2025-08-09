@@ -40,7 +40,7 @@ export default function ExportCV({ cvData, onClose }: ExportCVProps) {
     setIsExporting(format);
     try {
       const { endpoint } = formatConfig[format];
-      const res = await fetch(`http://localhost:5000/api/cv/${cvData._id}/${endpoint}`);
+      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${cvData._id}/${endpoint}`); // Changed URL
 
       if (!res.ok) {
         let errorDetails = `Server responded with status ${res.status}`;

@@ -4,7 +4,7 @@ import { CVData } from "@/types/cv";
 async function getCvData(id: string): Promise<CVData | null> {
   try {
     // This fetch call runs on the server, so we need the full URL to the Express backend
-    const res = await fetch(`http://localhost:5000/api/cv/${id}`);
+    const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${id}`); // Changed URL
     if (!res.ok) {
       return null;
     }

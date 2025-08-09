@@ -118,7 +118,7 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/cv/${editedCV._id}`, {
+      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${editedCV._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editedCV),
