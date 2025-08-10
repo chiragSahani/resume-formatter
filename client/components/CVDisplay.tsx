@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { FileText } from 'lucide-react';
 import { CVData } from '@/types/cv';
 import { Card, CardHeader, CardContent, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';

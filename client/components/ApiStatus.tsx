@@ -18,6 +18,7 @@ export default function ApiStatus() {
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 10000, // 10 second timeout
       });
       
       if (response.ok) {

@@ -30,7 +30,7 @@ export default function ExportCV({ cvData, onClose, onVisualExport }: ExportCVPr
   const { toast } = useToast();
 
   const handleExport = async (format: ExportFormat) => {
-    if (!cvData._id || !cvData.header.name) {
+    if (!cvData?._id || !cvData?.header?.name) {
       toast({
         title: 'Incomplete Data',
         description: 'CV data is incomplete and cannot be exported.',
@@ -53,6 +53,8 @@ export default function ExportCV({ cvData, onClose, onVisualExport }: ExportCVPr
         case 'txt':
           await api.exportCVAsText(cvData._id, filename);
           break;
+        default:
+          throw new Error(`Unsupported format: ${format}`);
       }
 
       toast({

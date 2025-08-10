@@ -22,10 +22,11 @@ async function apiRequest<T>(
   
   try {
     const response = await fetch(url, {
+      timeout: 30000, // 30 second timeout
       ...options,
       headers: {
-        'Content-Type': 'application/json',
         ...options.headers,
+        ...(options.body && typeof options.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
       },
     });
 

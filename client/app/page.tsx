@@ -12,6 +12,10 @@ export default function HomePage() {
   const [originalText, setOriginalText] = useState<string | undefined>(undefined);
 
   const handleFileProcessed = (data: CVData, text?: string) => {
+    if (!data) {
+      console.error('Invalid CV data received');
+      return;
+    }
     setCvData(data);
     setOriginalText(text);
   };
@@ -22,7 +26,7 @@ export default function HomePage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Header />
       <ApiStatus />
       <main className="container mx-auto px-4 py-8">
@@ -36,6 +40,6 @@ export default function HomePage() {
           <FileUpload onFileProcessed={handleFileProcessed} />
         )}
       </main>
-    </>
+    </div>
   );
 }

@@ -51,12 +51,16 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
     try {
       const data = await api.uploadCV(selectedFile);
-      onFileProcessed(data.cvData, data.originalText);
-      
-      toast({
-        title: 'Success!',
-        description: 'Your CV has been processed successfully.',
-      });
+      if (data && data.cvData) {
+        onFileProcessed(data.cvData, data.originalText);
+        
+        toast({
+          title: 'Success!',
+          description: 'Your CV has been processed successfully.',
+        });
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (err) {
       console.error('Upload error:', err);
       const errorMessage = err instanceof ApiError 

@@ -118,15 +118,28 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
   };
 
   const handleSave = async () => {
+    if (!editedCV._id) {
+      toast({
+        title: 'Error',
+        description: 'Cannot save CV: Missing ID',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const updatedData = await api.updateCV(editedCV._id, editedCV);
-      onUpdateCV(updatedData);
-      
-      toast({
-        title: 'Success!',
-        description: 'Your CV has been saved successfully.',
-      });
+      if (updatedData) {
+        onUpdateCV(updatedData);
+        
+        toast({
+          title: 'Success!',
+          description: 'Your CV has been saved successfully.',
+        });
+      } else {
+        throw new Error('Failed to save CV');
+      }
     } catch (err) {
       console.error('Save error:', err);
       const errorMessage = err instanceof ApiError 

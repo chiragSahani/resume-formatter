@@ -33,7 +33,7 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
   };
 
   const handleVisualPdfExport = async () => {
-    if (cvDisplayRef.current) {
+    if (cvDisplayRef.current && cvData?.header?.name) {
       setShowExport(false);
       
       try {
@@ -82,6 +82,12 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
           variant: 'destructive',
         });
       }
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Cannot export: CV data is incomplete.',
+        variant: 'destructive',
+      });
     }
   };
 
