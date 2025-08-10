@@ -3,15 +3,11 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const xlsx = require('xlsx');
-const OpenAI = require('openai');
-const Anthropic = require('@anthropic-ai/sdk');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 require('dotenv').config();
 
 // --- AI Service Initialization ---
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
-const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // --- In-Memory Cache ---
@@ -125,39 +121,20 @@ async function formatWithGemini(text) {
 
     if (!response.ok) throw new Error(`Gemini API error: ${response.statusText}`);
     const result = await response.json();
-    return parseJsonResponse(result?.candidates?.[0]?.content?.parts?.[0]?.text);
-}
+    const formattedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-async function formatWithOpenAI(text) {
-    if (!openai) throw new Error("OpenAI API key is not configured.");
-    const prompt = commonPrompt.replace('%TEXT%', text);
+    if (!formattedText) {
+        console.warn("Gemini returned a successful response but with no content.", result);
+        throw new Error("Failed to format CV. The API returned an empty response.");
+    }
 
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-    });
-
-    return parseJsonResponse(completion.choices[0].message.content);
-}
-
-async function formatWithAnthropic(text) {
-    if (!anthropic) throw new Error("Anthropic API key is not configured.");
-    const prompt = commonPrompt.replace('%TEXT%', text);
-
-    const msg = await anthropic.messages.create({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 4096,
-        messages: [{ role: "user", content: prompt }],
-    });
-
-    return parseJsonResponse(msg.content[0].text);
+    return parseJsonResponse(formattedText);
 }
 
 // --- Main Orchestration ---
 
 /**
- * Orchestrates parsing and formatting a CV, with fallback and caching.
+ * Orchestrates parsing and formatting a CV using Gemini, with caching.
  */
 async function parseAndFormatCV(rawText) {
     if (!rawText || rawText.trim().length < 20) {
@@ -170,37 +147,25 @@ async function parseAndFormatCV(rawText) {
         return cache.get(rawText);
     }
 
-    // Define the order of AI providers to try
-    const providers = [
-        { name: 'Gemini', fn: formatWithGemini, enabled: !!GEMINI_API_KEY },
-        { name: 'OpenAI', fn: formatWithOpenAI, enabled: !!openai },
-        { name: 'Anthropic', fn: formatWithAnthropic, enabled: !!anthropic }
-    ].filter(p => p.enabled);
-
-    if (providers.length === 0) {
-        throw new Error("No AI providers are configured. Please set at least one API key.");
+    if (!GEMINI_API_KEY) {
+        throw new Error("Gemini API provider is not configured. Please set the GEMINI_API_KEY.");
     }
 
-    let lastError = null;
-    for (const provider of providers) {
-        try {
-            console.log(`Attempting to format with ${provider.name}...`);
-            const formattedCV = await provider.fn(rawText);
-            if (formattedCV) {
-                // Store result in cache
-                cache.set(rawText, formattedCV);
-                console.log(`Successfully formatted with ${provider.name}.`);
-                return formattedCV;
-            }
-            lastError = new Error(`Provider ${provider.name} returned an empty or invalid response.`);
-        } catch (error) {
-            console.error(`Error with ${provider.name}:`, error.message);
-            lastError = error;
+    try {
+        console.log(`Attempting to format with Gemini...`);
+        const formattedCV = await formatWithGemini(rawText);
+        if (formattedCV) {
+            // Store result in cache
+            cache.set(rawText, formattedCV);
+            console.log(`Successfully formatted with Gemini.`);
+            return formattedCV;
+        } else {
+            throw new Error(`Gemini returned an empty or invalid response.`);
         }
+    } catch (error) {
+        console.error(`Error with Gemini:`, error.message);
+        throw new Error(`AI processing failed. Last error: ${error.message}`);
     }
-
-    // If all providers fail
-    throw new Error(`All AI providers failed. Last error: ${lastError.message}`);
 }
 
 module.exports = { parseAndFormatCV, extractText };
