@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { CVData } from '@/types/cv';
-import CVEditor from './CVEditor';
 import CVDisplay from './CVDisplay';
 import ExportCV from './ExportCV';
 import CVActions from './CVActions';
-import CVTabs, { Tab } from './CVTabs';
 import OriginalTextView from './OriginalTextView';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface CVPreviewProps {
   cvData: CVData;
@@ -21,16 +20,10 @@ interface CVPreviewProps {
 
 export default function CVPreview({ cvData: initialCvData, originalText, onUploadNew }: CVPreviewProps) {
   const [cvData, setCvData] = useState<CVData>(initialCvData);
-  const [activeTab, setActiveTab] = useState<Tab>('preview');
   const [showExport, setShowExport] = useState(false);
   const { toast } = useToast();
 
   const cvDisplayRef = useRef<HTMLDivElement>(null);
-
-  const handleUpdateCV = (updatedData: CVData) => {
-    setCvData(updatedData);
-    setActiveTab('preview');
-  };
 
   const handleVisualPdfExport = async () => {
     if (cvDisplayRef.current && cvData?.header?.name) {
@@ -43,12 +36,19 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
         });
 
         const input = cvDisplayRef.current;
+        // When taking the screenshot, temporarily set the background to white
+        const originalBg = input.style.backgroundColor;
+        input.style.backgroundColor = '#ffffff';
+
         const canvas = await html2canvas(input, { 
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#ffffff'
         });
+
+        // Restore original background color
+        input.style.backgroundColor = originalBg;
+
         const imgData = canvas.toDataURL('image/png');
 
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -93,33 +93,35 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <div className="bg-card rounded-lg shadow-sm border-border p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-2xl font-bold text-foreground">
               {cvData.header.name}
             </h2>
-            <p className="text-slate-600">{cvData.header.title}</p>
+            <p className="text-muted-foreground">{cvData.header.title}</p>
           </div>
           <CVActions onExport={() => setShowExport(true)} onUploadNew={onUploadNew} />
         </div>
       </div>
 
-      <CVTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs defaultValue="formatted">
+        <TabsList>
+          <TabsTrigger value="formatted">Formatted CV</TabsTrigger>
+          <TabsTrigger value="original">Original Text</TabsTrigger>
+        </TabsList>
+        <TabsContent value="formatted" className="p-6">
+            <CVDisplay cvData={cvData} setCvData={setCvData} ref={cvDisplayRef} />
+        </TabsContent>
+        <TabsContent value="original" className="p-6">
+            {originalText ? (
+                <OriginalTextView text={originalText} />
+            ) : (
+                <p>No original text available.</p>
+            )}
+        </TabsContent>
+      </Tabs>
 
-      <div className="p-6">
-        {activeTab === 'original' && originalText && (
-          <OriginalTextView text={originalText} />
-        )}
-
-        {activeTab === 'preview' && (
-          <CVDisplay cvData={cvData} ref={cvDisplayRef} />
-        )}
-
-        {activeTab === 'edit' && (
-          <CVEditor cvData={cvData} onUpdateCV={handleUpdateCV} />
-        )}
-      </div>
 
       {showExport && (
         <ExportCV

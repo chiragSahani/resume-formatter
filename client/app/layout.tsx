@@ -1,25 +1,33 @@
-'use client';
+"use client"
 
-import './globals.css';
-import { Inter } from 'next/font/google';
-import { Toaster } from '@/components/ui/toaster';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import "./globals.css"
+import { Noto_Serif } from "next/font/google"
+import { ThemeProvider } from "@/components/ThemeProvider"
+import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ['latin'] });
+const notoSerif = Noto_Serif({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+})
 
-export default function RootLayout() {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <ErrorBoundary>
-          <div id="__next">
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-              {/* Content will be rendered by page.tsx */}
-            </div>
-          </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={notoSerif.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
           <Toaster />
-        </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

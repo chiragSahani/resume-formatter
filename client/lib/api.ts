@@ -1,5 +1,5 @@
 // API configuration and utility functions
-const API_BASE_URL = 'https://resume-formatter-7rc4.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export interface ApiResponse<T> {
   success: boolean;

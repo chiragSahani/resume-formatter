@@ -3,16 +3,22 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const xlsx = require('xlsx');
+const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 require('dotenv').config();
 
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
+// --- AI Service Initialization ---
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// --- In-Memory Cache ---
+const cache = new Map();
 
 /**
- * Extracts raw text from a PDF, DOCX, or XLSX file.
- * @param {object} file - The file object from multer.
- * @returns {Promise<string>} The extracted text content.
+ * Extracts raw text from a file (PDF, DOCX, XLSX).
  */
 async function extractText(file) {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -43,17 +49,13 @@ async function extractText(file) {
   }
 }
 
-/**
- * Sends extracted CV text to the Gemini API for professional formatting.
- * @param {string} text - The raw text from the CV.
- * @returns {Promise<object>} The formatted CV content as a JSON object.
- */
-async function formatWithAI(text) {
-  const prompt = `
+// --- AI Formatting Logic ---
+
+const commonPrompt = `
 You are an expert CV formatting AI. Your task is to parse the unstructured CV text provided and transform it into a clean, professional, and structured JSON object. You must strictly adhere to all the formatting and content rules below.
 
 **JSON Output Structure:**
-The final output MUST be a single JSON object with the following structure. Do not add any fields that are not in this structure.
+The final output MUST be a single, valid JSON object with the following structure. Do not add any fields that are not in this structure. Do not add any explanatory text before or after the JSON object.
 {
   "header": { "name": "string", "title": "string", "email": "string", "phone": "string", "linkedin": "string", "website": "string" },
   "summary": "string",
@@ -69,94 +71,136 @@ The final output MUST be a single JSON object with the following structure. Do n
 }
 
 **Formatting and Content Rules (MANDATORY):**
-
-1.  **Capitalization:**
-    *   Job titles MUST be capitalized (e.g., "Software Engineer", not "software engineer").
-    *   Proper nouns (names, companies, institutions) must be correctly capitalized.
-
-2.  **Date Formatting:**
-    *   All dates in the 'experience' section (startDate, endDate) and 'education' section (year) MUST be formatted as the first three letters of the month followed by the year (e.g., "Jan 2020", "Dec 2022").
-    *   If a month is not specified, infer it if possible or use the year alone (e.g., "2020").
-
-3.  **Content Cleanup & Professional Tone:**
-    *   **Remove Redundancy:** Rephrase sentences to be more direct. For example, "I was responsible for managing a team" should become "Managed a team".
-    *   **Active Voice:** Use active voice and bullet points for responsibilities. Convert paragraphs describing job duties into a list of concise bullet points. Each responsibility should be a string in the "responsibilities" array.
-    *   **Spelling Correction:** Correct common professional spelling mistakes (e.g., "Principle" -> "Principal", "Discrete" -> "Discreet").
-    *   **Remove Inappropriate Fields:** Do NOT include fields like Age or Number of Dependants in the final JSON. Extract other personal details into the 'personalDetails' object.
-
-4.  **Section Organization:**
-    *   Categorize the information accurately into the sections defined in the JSON structure.
-    *   'Experience' should be in reverse chronological order (most recent first).
-    *   'Key Skills', 'Education', and 'Interests' should be presented as bullet-pointed lists (arrays of strings in the JSON).
+1.  **Capitalization:** Job titles MUST be capitalized (e.g., "Software Engineer").
+2.  **Date Formatting:** Dates MUST be formatted as the first three letters of the month and the year (e.g., "Jan 2020").
+3.  **Content Cleanup:** Rephrase sentences to be direct and use active voice (e.g., "Managed a team" instead of "I was responsible for..."). Convert paragraphs of duties into concise bullet points in the "responsibilities" array. Correct spelling errors.
+4.  **Remove Inappropriate Fields:** Exclude age, dependents, etc.
+5.  **Organization:** Order experience in reverse chronological order.
 
 **CV Input Text:**
 ---
-${text}
+%TEXT%
 ---
 
 **Formatted JSON Output:**
 `;
 
-  const response = await fetch(GEMINI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    let errorDetails = `Status: ${response.status} ${response.statusText}`;
+/**
+ * Parses the JSON response from an AI model.
+ */
+function parseJsonResponse(text) {
+    if (!text) return null;
     try {
-      const errorJson = await response.json();
-      errorDetails = JSON.stringify(errorJson.error, null, 2);
-    } catch (e) {
-      errorDetails = await response.text();
+        // Attempt to find a JSON block first
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+            return JSON.parse(jsonMatch[1]);
+        }
+        // If no block, try to parse the whole string
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Failed to parse JSON from AI response:", text);
+        return null;
     }
-    throw new Error(`Gemini API Error:\n${errorDetails}`);
-  }
-
-  const result = await response.json();
-  const formattedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!formattedText) {
-    console.warn("Gemini returned a successful response but with no content.", result);
-    throw new Error("Failed to format CV. The API returned an empty response.");
-  }
-  
-  try {
-    const jsonMatch = formattedText.match(/```json\n([\s\S]*?)\n```/);
-    if (jsonMatch && jsonMatch[1]) {
-      return JSON.parse(jsonMatch[1]);
-    }
-    return JSON.parse(formattedText);
-  } catch (error) {
-    console.error("Failed to parse JSON from Gemini response:", formattedText);
-    throw new Error("Failed to parse formatted CV from AI response.");
-  }
 }
 
+async function formatWithGemini(text) {
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key is not configured.");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    const prompt = commonPrompt.replace('%TEXT%', text);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+            ]
+        })
+    });
+
+    if (!response.ok) throw new Error(`Gemini API error: ${response.statusText}`);
+    const result = await response.json();
+    return parseJsonResponse(result?.candidates?.[0]?.content?.parts?.[0]?.text);
+}
+
+async function formatWithOpenAI(text) {
+    if (!openai) throw new Error("OpenAI API key is not configured.");
+    const prompt = commonPrompt.replace('%TEXT%', text);
+
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2,
+    });
+
+    return parseJsonResponse(completion.choices[0].message.content);
+}
+
+async function formatWithAnthropic(text) {
+    if (!anthropic) throw new Error("Anthropic API key is not configured.");
+    const prompt = commonPrompt.replace('%TEXT%', text);
+
+    const msg = await anthropic.messages.create({
+        model: "claude-3-haiku-20240307",
+        max_tokens: 4096,
+        messages: [{ role: "user", content: prompt }],
+    });
+
+    return parseJsonResponse(msg.content[0].text);
+}
+
+// --- Main Orchestration ---
+
 /**
- * Main function to orchestrate parsing and formatting a CV file.
- * @param {string} rawText - The raw text extracted from the CV.
- * @returns {Promise<object>} The fully formatted CV JSON object.
+ * Orchestrates parsing and formatting a CV, with fallback and caching.
  */
 async function parseAndFormatCV(rawText) {
-  if (!rawText || rawText.trim().length < 20) {
-      throw new Error("Extracted text is too short or empty. Please check the document content.");
-  }
-  const formattedCV = await formatWithAI(rawText);
-  return formattedCV;
+    if (!rawText || rawText.trim().length < 20) {
+        throw new Error("Extracted text is too short or empty.");
+    }
+
+    // Check cache first
+    if (cache.has(rawText)) {
+        console.log("Returning cached result.");
+        return cache.get(rawText);
+    }
+
+    // Define the order of AI providers to try
+    const providers = [
+        { name: 'Gemini', fn: formatWithGemini, enabled: !!GEMINI_API_KEY },
+        { name: 'OpenAI', fn: formatWithOpenAI, enabled: !!openai },
+        { name: 'Anthropic', fn: formatWithAnthropic, enabled: !!anthropic }
+    ].filter(p => p.enabled);
+
+    if (providers.length === 0) {
+        throw new Error("No AI providers are configured. Please set at least one API key.");
+    }
+
+    let lastError = null;
+    for (const provider of providers) {
+        try {
+            console.log(`Attempting to format with ${provider.name}...`);
+            const formattedCV = await provider.fn(rawText);
+            if (formattedCV) {
+                // Store result in cache
+                cache.set(rawText, formattedCV);
+                console.log(`Successfully formatted with ${provider.name}.`);
+                return formattedCV;
+            }
+            lastError = new Error(`Provider ${provider.name} returned an empty or invalid response.`);
+        } catch (error) {
+            console.error(`Error with ${provider.name}:`, error.message);
+            lastError = error;
+        }
+    }
+
+    // If all providers fail
+    throw new Error(`All AI providers failed. Last error: ${lastError.message}`);
 }
 
 module.exports = { parseAndFormatCV, extractText };
