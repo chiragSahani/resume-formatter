@@ -20,9 +20,9 @@ export default function Header({ cvData }: HeaderProps) {
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
-            className="bg-white p-3 rounded-full shadow-md"
+            className="bg-gray-800 p-3 rounded-full shadow-md"
           >
-            <FileText className="h-7 w-7 text-blue-700" />
+            <FileText className="h-7 w-7 text-blue-400" />
           </motion.div>
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight">CV Formatter</h1>

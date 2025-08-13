@@ -19,8 +19,8 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 export default function CVTabs({ activeTab, onTabChange }: CVTabsProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-      <div className="border-b border-slate-200">
+    <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+      <div className="border-b border-gray-700">
         <div className="flex">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -31,7 +31,7 @@ export default function CVTabs({ activeTab, onTabChange }: CVTabsProps) {
                 className={`flex items-center space-x-2 px-6 py-4 font-medium transition-colors relative ${
                   activeTab === tab.id
                     ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-slate-600 hover:text-slate-800'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 <Icon className="h-4 w-4" />

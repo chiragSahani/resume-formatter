@@ -13,15 +13,15 @@ interface CVDisplayProps {
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-    <h3 className="text-2xl font-bold text-slate-800 border-b-2 border-blue-500 pb-2 mb-4">{title}</h3>
-    <div className="space-y-4 text-slate-700">{children}</div>
+    <h3 className="text-2xl font-bold text-gray-200 border-b-2 border-blue-500 pb-2 mb-4">{title}</h3>
+    <div className="space-y-4 text-gray-300">{children}</div>
   </motion.div>
 );
 
 const ExperienceItem = ({ item }: { item: any }) => (
   <div>
-    <h4 className="text-lg font-semibold text-slate-900">{item.title} at {item.company}</h4>
-    <p className="text-sm text-slate-500">{item.startDate} - {item.endDate}</p>
+    <h4 className="text-lg font-semibold text-gray-100">{item.title} at {item.company}</h4>
+    <p className="text-sm text-gray-400">{item.startDate} - {item.endDate}</p>
     <ul className="list-disc list-inside mt-2 space-y-1">
       {item.responsibilities.map((res: string, i: number) => <li key={i}>{res}</li>)}
     </ul>
@@ -30,8 +30,8 @@ const ExperienceItem = ({ item }: { item: any }) => (
 
 const EducationItem = ({ item }: { item: any }) => (
   <div>
-    <h4 className="text-lg font-semibold text-slate-900">{item.degree}</h4>
-    <p className="text-slate-600">{item.institution} ({item.year})</p>
+    <h4 className="text-lg font-semibold text-gray-100">{item.degree}</h4>
+    <p className="text-gray-400">{item.institution} ({item.year})</p>
   </div>
 );
 
@@ -43,13 +43,13 @@ const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, 
   const { header, summary, experience, education, skills } = cvData;
 
   return (
-    <Card ref={ref} className="max-w-4xl mx-auto p-8 shadow-lg">
+    <Card ref={ref} className="max-w-4xl mx-auto p-8">
       <CardHeader className="text-center p-0 border-b pb-6 mb-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <CardTitle className="text-5xl font-extrabold text-slate-900">{header.name}</CardTitle>
+          <CardTitle className="text-5xl font-extrabold text-gray-100">{header.name}</CardTitle>
           <p className="text-2xl text-blue-600 font-medium mt-2">{header.title}</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center items-center space-x-6 text-slate-600 mt-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex justify-center items-center space-x-6 text-gray-400 mt-4">
           {header.email && <a href={`mailto:${header.email}`} className="flex items-center space-x-2 hover:text-blue-500"><Mail size={16} /><span>{header.email}</span></a>}
           {header.phone && <span className="flex items-center space-x-2"><Phone size={16} /><span>{header.phone}</span></span>}
           {header.linkedin && <a href={header.linkedin} className="flex items-center space-x-2 hover:text-blue-500"><Linkedin size={16} /><span>LinkedIn</span></a>}

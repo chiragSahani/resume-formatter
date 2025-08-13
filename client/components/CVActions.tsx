@@ -16,7 +16,7 @@ export default function CVActions({ onExport, onUploadNew }: CVActionsProps) {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onUploadNew}
-        className="flex items-center space-x-2 px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+        className="flex items-center space-x-2 px-4 py-2 text-gray-400 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Upload New</span>

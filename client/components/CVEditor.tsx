@@ -138,7 +138,7 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="p-4 bg-slate-50 rounded-lg border">
+      <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Header</h3>
         <div className="grid grid-cols-2 gap-4">
           <Input name="name" value={editedCV.header.name} onChange={handleHeaderChange} placeholder="Name" />
@@ -151,13 +151,13 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
       </div>
 
       {/* Summary */}
-      <div className="p-4 bg-slate-50 rounded-lg border">
+      <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Summary</h3>
         <Textarea value={editedCV.summary} onChange={handleSummaryChange} placeholder="Professional Summary" />
       </div>
 
       {/* Experience */}
-      <div className="p-4 bg-slate-50 rounded-lg border">
+      <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Experience</h3>
         {editedCV.experience.map((exp, expIndex) => (
           <div key={expIndex} className="space-y-2 border-b pb-4 mb-4">
@@ -182,7 +182,7 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
       </div>
 
       {/* Education */}
-      <div className="p-4 bg-slate-50 rounded-lg border">
+      <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Education</h3>
         {editedCV.education.map((edu, index) => (
           <div key={index} className="grid grid-cols-3 gap-4 mb-2">
@@ -196,7 +196,7 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
       </div>
 
       {/* Skills */}
-      <div className="p-4 bg-slate-50 rounded-lg border">
+      <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Skills</h3>
         <div className="grid grid-cols-3 gap-4">
           {editedCV.skills.map((skill, index) => (

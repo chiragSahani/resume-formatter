@@ -80,10 +80,10 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         {...getRootProps()}
         className={`
           relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-500 ease-out
-          bg-gradient-to-br from-slate-50 to-white shadow-lg hover:shadow-xl
+          bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg hover:shadow-xl
           ${isDragActive 
-            ? 'border-blue-500 bg-blue-50' 
-            : 'border-slate-300 hover:border-blue-400'
+            ? 'border-blue-500 bg-blue-900' 
+            : 'border-gray-600 hover:border-blue-400'
           }
         `}
         whileHover={{ scale: 1.01 }}
@@ -94,22 +94,22 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         <div className="space-y-6">
           <motion.div
             className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300
-              ${isDragActive ? 'bg-blue-100' : 'bg-slate-100'}`}
+              ${isDragActive ? 'bg-blue-900' : 'bg-gray-700'}`}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
           >
-            <Upload className={`h-10 w-10 ${isDragActive ? 'text-blue-600' : 'text-slate-600'}`} />
+            <Upload className={`h-10 w-10 ${isDragActive ? 'text-blue-400' : 'text-gray-400'}`} />
           </motion.div>
           
           <div>
-            <h3 className="text-2xl font-extrabold text-slate-800 mb-2">
+            <h3 className="text-2xl font-extrabold text-gray-200 mb-2">
               {isDragActive ? 'Drop your CV here!' : 'Upload Your CV with AI'}
             </h3>
-            <p className="text-slate-600 mb-4 text-lg">
+            <p className="text-gray-400 mb-4 text-lg">
               Drag & drop your file, or click to browse
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-gray-500">
               Supports PDF, DOCX • Max size: 10MB
             </p>
           </div>
@@ -131,27 +131,27 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 p-6 bg-white border border-slate-200 rounded-2xl shadow-xl"
+          className="mt-8 p-6 bg-gray-800 border border-gray-700 rounded-2xl shadow-xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="bg-blue-900 p-3 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-400" />
               </div>
               <div>
-                <p className="font-bold text-lg text-slate-800">{selectedFile.name}</p>
-                <p className="text-sm text-slate-600">
+                <p className="font-bold text-lg text-gray-200">{selectedFile.name}</p>
+                <p className="text-sm text-gray-400">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
             <motion.button
               onClick={removeFile}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <X className="h-6 w-6 text-slate-600" />
+              <X className="h-6 w-6 text-gray-400" />
             </motion.button>
           </div>
           

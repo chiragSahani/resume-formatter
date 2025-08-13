@@ -59,13 +59,13 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-2xl font-bold text-gray-200">
               {cvData.header.name}
             </h2>
-            <p className="text-slate-600">{cvData.header.title}</p>
+            <p className="text-gray-400">{cvData.header.title}</p>
           </div>
           <CVActions onExport={() => setShowExport(true)} onUploadNew={onUploadNew} />
         </div>

@@ -17,7 +17,7 @@ export default function LoadingSpinner() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-lg font-semibold text-slate-800 flex items-center justify-center"
+          className="text-lg font-semibold text-gray-200 flex items-center justify-center"
         >
           <Sparkles className="h-5 w-5 mr-2 text-blue-600" />
           AI is processing your CV...
@@ -29,9 +29,9 @@ export default function LoadingSpinner() {
           transition={{ delay: 0.4 }}
           className="space-y-1"
         >
-          <p className="text-slate-600">Extracting and analyzing content</p>
-          <p className="text-slate-600">Formatting for professional presentation</p>
-          <p className="text-slate-600">Optimizing for recruiter readability</p>
+          <p className="text-gray-400">Extracting and analyzing content</p>
+          <p className="text-gray-400">Formatting for professional presentation</p>
+          <p className="text-gray-400">Optimizing for recruiter readability</p>
         </motion.div>
         
         <motion.div
@@ -40,7 +40,7 @@ export default function LoadingSpinner() {
           transition={{ duration: 3, delay: 0.6 }}
           className="w-64 mx-auto mt-4"
         >
-          <div className="bg-slate-200 rounded-full h-2 overflow-hidden">
+          <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: "0%" }}

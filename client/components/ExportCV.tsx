@@ -91,14 +91,14 @@ export default function ExportCV({ cvData, onClose, onVisualExport }: ExportCVPr
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6"
+          className="dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+            <h3 className="text-xl font-semibold dark:text-slate-200">
               Export CV
             </h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+              <X className="h-5 w-5 dark:text-slate-400" />
             </Button>
           </div>
 
