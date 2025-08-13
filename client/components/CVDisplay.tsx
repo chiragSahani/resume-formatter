@@ -86,4 +86,6 @@ const CVDisplay = React.forwardRef<HTMLDivElement, CVDisplayProps>(({ cvData }, 
   );
 });
 
+CVDisplay.displayName = 'CVDisplay';
+
 export default CVDisplay;
