@@ -150,6 +150,18 @@ export default function CVEditor({ cvData, onUpdateCV }: CVEditorProps) {
         </div>
       </div>
 
+      {/* Photo Section */}
+      <div className="p-4 bg-gray-800 rounded-lg border flex items-center space-x-4">
+        <h3 className="text-lg font-semibold">Photo</h3>
+        {editedCV.photoUrl ? (
+          <img src={editedCV.photoUrl} alt="CV Photo" className="w-24 h-24 rounded-full object-cover" />
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center text-gray-400">
+            No Photo
+          </div>
+        )}
+      </div>
+
       {/* Summary */}
       <div className="p-4 bg-gray-800 rounded-lg border">
         <h3 className="text-lg font-semibold mb-2">Summary</h3>

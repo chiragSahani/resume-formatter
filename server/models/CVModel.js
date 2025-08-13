@@ -30,6 +30,7 @@ const CVSchema = new mongoose.Schema({
   experience: [ExperienceItemSchema],
   education: [EducationItemSchema],
   skills: [String],
+  photoUrl: String, // Added for photo detection
   uploadDate: { type: Date, default: Date.now },
 });
 

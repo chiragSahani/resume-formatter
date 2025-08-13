@@ -138,6 +138,10 @@ async function parseAndFormatCV(file) {
 
   const formattedCV = await formatWithAI(originalText);
   
+  // TODO: Integrate Mistral OCR here to detect and extract photo URL.
+  // For now, we'll add a placeholder photoUrl.
+  formattedCV.photoUrl = null; // Replace with actual photo URL from OCR if detected
+
   // Clean up the uploaded file
   await fs.unlink(file.path);
 

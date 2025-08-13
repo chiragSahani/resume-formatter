@@ -8,6 +8,7 @@ export interface CVData {
     linkedin?: string;
     website?: string;
   };
+  photoUrl?: string; // Added for photo detection
   summary?: string;
   experience: ExperienceItem[];
   education: EducationItem[];
