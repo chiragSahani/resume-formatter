@@ -19,7 +19,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
     setError(null);
     
     if (rejectedFiles.length > 0) {
-      setError('Please upload a valid PDF or DOCX file.');
+      setError('Please upload a valid PDF, DOCX, JPG, or PNG file.');
       return;
     }
 
@@ -34,6 +34,8 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
     },
     multiple: false,
     maxSize: 10 * 1024 * 1024 // 10MB
@@ -49,7 +51,9 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       const formData = new FormData();
       formData.append('cv', selectedFile);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cv/upload`, {
+      // Use the environment variable for the API URL, with a fallback
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/cv/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -75,15 +79,15 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto py-12">
       <motion.div
         {...getRootProps()}
         className={`
-          relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-500 ease-out
-          bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg hover:shadow-xl
+          relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300
+          bg-card shadow-lg
           ${isDragActive 
-            ? 'border-blue-500 bg-blue-900' 
-            : 'border-gray-600 hover:border-blue-400'
+            ? 'border-primary' 
+            : 'border-muted hover:border-primary/80'
           }
         `}
         whileHover={{ scale: 1.01 }}
@@ -91,26 +95,25 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       >
         <input {...getInputProps()} />
       
-        <div className="space-y-6">
+        <div className="space-y-4">
           <motion.div
-            className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300
-              ${isDragActive ? 'bg-blue-900' : 'bg-gray-700'}`}
+            className="mx-auto w-16 h-16 rounded-full flex items-center justify-center bg-muted"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
           >
-            <Upload className={`h-10 w-10 ${isDragActive ? 'text-blue-400' : 'text-gray-400'}`} />
+            <Upload className={`h-8 w-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
           </motion.div>
           
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-200 mb-2">
-              {isDragActive ? 'Drop your CV here!' : 'Upload Your CV with AI'}
+            <h3 className="text-xl font-semibold text-foreground mb-1">
+              {isDragActive ? 'Drop your CV here!' : 'Upload Your CV'}
             </h3>
-            <p className="text-gray-400 mb-4 text-lg">
-              Drag & drop your file, or click to browse
+            <p className="text-muted-foreground mb-2">
+              Drag & drop, or click to browse
             </p>
-            <p className="text-sm text-gray-500">
-              Supports PDF, DOCX • Max size: 10MB
+            <p className="text-xs text-muted-foreground/80">
+              Supports PDF, DOCX, JPG, PNG • Max 10MB
             </p>
           </div>
         </div>
@@ -118,12 +121,12 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 p-5 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-3 shadow-md"
+          className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center space-x-3"
         >
-          <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
-          <p className="text-red-700 text-base font-medium">{error}</p>
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+          <p className="text-destructive text-sm font-medium">{error}</p>
         </motion.div>
       )}
 
@@ -131,27 +134,27 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 p-6 bg-gray-800 border border-gray-700 rounded-2xl shadow-xl"
+          className="mt-8 p-6 bg-card border border-muted rounded-xl shadow-lg"
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
-              <div className="bg-blue-900 p-3 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-400" />
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <FileText className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-lg text-gray-200">{selectedFile.name}</p>
-                <p className="text-sm text-gray-400">
+                <p className="font-medium text-foreground">{selectedFile.name}</p>
+                <p className="text-sm text-muted-foreground">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
             <motion.button
               onClick={removeFile}
-              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+              className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <X className="h-6 w-6 text-gray-400" />
+              <X className="h-5 w-5" />
             </motion.button>
           </div>
           
@@ -160,8 +163,8 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
             whileTap={{ scale: 0.98 }}
             onClick={handleUpload}
             disabled={isUploading}
-            className="w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300
-                       bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:from-blue-700 hover:to-blue-800
+            className="w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all duration-300
+                       bg-primary text-primary-foreground shadow-lg hover:bg-primary/90
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
           >
             {isUploading ? (
@@ -170,7 +173,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
                 <span>Processing with AI...</span>
               </>
             ) : (
-              <span>Process CV with AI</span>
+              <span>Process CV</span>
             )}
           </motion.button>
         </motion.div>

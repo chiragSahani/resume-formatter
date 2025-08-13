@@ -10,7 +10,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google-cloud/vision": "^5.3.3",
     "@google/generative-ai": "^0.24.1",
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "docx": "^9.5.1",
     "dotenv": "^17.2.1",
@@ -21,7 +23,10 @@
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0",
     "openai": "^5.12.1",
+    "pdf-extraction": "^1.0.2",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "sharp": "^0.34.3",
+    "tesseract.js": "^6.0.1"
   }
 }

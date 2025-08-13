@@ -7,6 +7,13 @@ const HeaderSchema = new mongoose.Schema({
   phone: String,
   linkedin: String,
   website: String,
+  // New fields to be added by Agent 3 from the registration form
+  nationality: String,
+  languages: String,
+  dateOfBirth: String,
+  maritalStatus: String,
+  drivingLicence: String,
+  smokerStatus: String,
 });
 
 const ExperienceItemSchema = new mongoose.Schema({
@@ -23,6 +30,12 @@ const EducationItemSchema = new mongoose.Schema({
   year: String,
 });
 
+// New schema for the CV metadata (header/footer)
+const MetaSchema = new mongoose.Schema({
+    headerText: String,
+    footerText: String,
+});
+
 const CVSchema = new mongoose.Schema({
   originalFileName: String,
   header: HeaderSchema,
@@ -30,7 +43,9 @@ const CVSchema = new mongoose.Schema({
   experience: [ExperienceItemSchema],
   education: [EducationItemSchema],
   skills: [String],
-  photoUrl: String, // Added for photo detection
+  photoUrl: String,
+  photoFound: Boolean, // Added to store the result of photo detection
+  meta: MetaSchema, // Added to store header/footer content
   uploadDate: { type: Date, default: Date.now },
 });
 

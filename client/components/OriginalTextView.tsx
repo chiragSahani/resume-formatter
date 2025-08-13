@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 
 interface OriginalTextViewProps {
@@ -12,9 +11,9 @@ export default function OriginalTextView({ text }: OriginalTextViewProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="font-semibold text-gray-200 mb-4">Original Extracted Text</h3>
-        <pre className="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed">
+      <div className="bg-card border border-muted rounded-lg p-6">
+        <h3 className="font-semibold text-foreground mb-4">Original Extracted Text</h3>
+        <pre className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed bg-background/50 p-4 rounded-md">
           {text}
         </pre>
       </div>
