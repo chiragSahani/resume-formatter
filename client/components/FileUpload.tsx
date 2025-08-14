@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, DropzoneRootProps } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload, 
-  FileText, 
-  X, 
+import {
+  Upload,
+  FileText,
+  X,
   Brain
 } from 'lucide-react';
 import { CVData } from '@/types/cv';
@@ -49,6 +49,9 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
     multiple: false,
     maxSize: 10 * 1024 * 1024 // 10MB
   });
+
+  // FIX: Destructure onDrag from getRootProps to resolve type conflict
+  const { onDrag, ...rootProps }: DropzoneRootProps = getRootProps();
 
   const handleUpload = async () => {
     if (!selectedFile) return;
@@ -98,7 +101,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       {/* AI Loading Spinner Overlay */}
       <AnimatePresence>
         {isUploading && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -111,13 +114,14 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       </AnimatePresence>
 
       <div className="max-w-2xl mx-auto py-12">
+        {/* Apply the corrected props here */}
         <motion.div
-          {...getRootProps()}
+          {...rootProps}
           className={`
             relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300
             bg-card shadow-lg
-            ${isDragActive 
-              ? 'border-primary' 
+            ${isDragActive
+              ? 'border-primary'
               : 'border-muted hover:border-primary/80'
             }
           `}
@@ -125,7 +129,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
           whileTap={{ scale: 0.99 }}
         >
           <input {...getInputProps()} />
-        
+
           <div className="space-y-4">
             <motion.div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center bg-muted"
@@ -135,7 +139,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
             >
               <Upload className={`h-8 w-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
             </motion.div>
-            
+
             <div>
               <h3 className="text-xl font-semibold text-foreground mb-1">
                 {isDragActive ? 'Drop your CV here!' : 'Upload Your CV'}
@@ -177,7 +181,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
                 <X className="h-5 w-5" />
               </motion.button>
             </div>
-            
+
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
