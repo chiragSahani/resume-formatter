@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { Upload, FileText, X, AlertCircle, Loader2 } from 'lucide-react';
 import { CVData } from '@/types/cv';
+import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
   onFileProcessed: (cvData: CVData, originalText?: string) => void;
@@ -12,14 +13,16 @@ interface FileUploadProps {
 
 export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-    setError(null);
-    
     if (rejectedFiles.length > 0) {
-      setError('Please upload a valid PDF, DOCX, JPG, or PNG file.');
+      toast({
+        title: 'File Rejected',
+        description: 'Please upload a valid PDF, DOCX, JPG, or PNG file.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -45,7 +48,6 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
     if (!selectedFile) return;
 
     setIsUploading(true);
-    setError(null);
 
     try {
       const formData = new FormData();
@@ -65,9 +67,17 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
       const data = await res.json();
       onFileProcessed(data.cvData, data.originalText);
+      toast({
+        title: 'Upload Successful',
+        description: 'Your CV has been processed.',
+      });
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Upload failed. Please try again.');
+      toast({
+        title: 'Upload Failed',
+        description: err.message || 'Upload failed. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsUploading(false);
     }
@@ -75,7 +85,6 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
 
   const removeFile = () => {
     setSelectedFile(null);
-    setError(null);
   };
 
   return (
@@ -119,16 +128,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         </div>
       </motion.div>
 
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center space-x-3"
-        >
-          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-          <p className="text-destructive text-sm font-medium">{error}</p>
-        </motion.div>
-      )}
+      
 
       {selectedFile && (
         <motion.div

@@ -6,7 +6,9 @@ const fetch = require('node-fetch');
 const { v2: cloudinary } = require('cloudinary');
 const { extractImages } = require('pdf-extraction');
 
+
 require('dotenv').config();
+
 
 // --- Cloudinary Configuration ---
 cloudinary.config({
@@ -15,10 +17,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
 
 // --- Pre-load Contextual Data on Server Start ---
 let contextData = {};
+
 
 async function loadContextualData() {
     console.log("Loading contextual documents for AI processing...");
@@ -28,9 +33,11 @@ async function loadContextualData() {
         const templateNotesBuffer = await fs.readFile(path.join(contextDir, 'CVTemplate_Notes.docx'));
         const finalCVExampleBuffer = await fs.readFile(path.join(contextDir, 'Client_FinalCV.pdf'));
 
+
         const { value: intakeFormText } = await mammoth.extractRawText({ buffer: registrationFormBuffer });
         const { value: formattingRulesText } = await mammoth.extractRawText({ buffer: templateNotesBuffer });
         const { text: finalCvExampleText } = await pdfParse(finalCVExampleBuffer);
+
 
         contextData = { intakeFormText, formattingRulesText, finalCvExampleText };
         console.log("Contextual documents loaded successfully.");
@@ -40,6 +47,7 @@ async function loadContextualData() {
     }
 }
 loadContextualData();
+
 
 /**
  * A robust wrapper for the Gemini API call with retry logic.
@@ -57,12 +65,14 @@ async function callGeminiWithRetry(requestBody, retries = 3) {
                 body: JSON.stringify(requestBody)
             });
 
+
             if (response.ok) {
                 const result = await response.json();
                 const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!text) throw new Error("Empty content response from Gemini.");
                 return text;
             }
+
 
             if (response.status === 503 || response.status === 429) {
                 lastError = new Error(`Gemini API Error: ${response.status} ${response.statusText}`);
@@ -72,7 +82,9 @@ async function callGeminiWithRetry(requestBody, retries = 3) {
                 continue;
             }
 
+
             throw new Error(`Gemini API Error: ${response.status} ${await response.text()}`);
+
 
         } catch (error) {
             lastError = error;
@@ -80,6 +92,7 @@ async function callGeminiWithRetry(requestBody, retries = 3) {
     }
     throw lastError;
 }
+
 
 /**
  * Extracts the first image from a PDF buffer and uploads it to Cloudinary.
@@ -93,10 +106,11 @@ async function extractAndUploadPhoto(pdfBuffer) {
             endPage: 1,
         });
 
+
         if (images && images.length > 0) {
             console.log("Image found in PDF, attempting to upload...");
             const imageBuffer = images[0];
-            
+           
             return new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     { resource_type: 'image', folder: 'cv-photos' },
@@ -116,6 +130,7 @@ async function extractAndUploadPhoto(pdfBuffer) {
     }
 }
 
+
 /**
  * Processes a CV using a unified, single-call approach to the Gemini API.
  * @param {Buffer} fileBuffer The buffer of the uploaded CV file.
@@ -126,18 +141,23 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
     console.log("Executing Unified AI Agent...");
     const base64Data = fileBuffer.toString('base64');
 
+
     const prompt = `
     You are an all-in-one CV processing expert. You will perform a multi-step analysis on the provided document and return a single, final JSON object.
+
 
     **Step 1: OCR & Photo Detection**
     - Analyze the document. Extract all text. Determine if a professional headshot photo is present.
 
+
     **Step 2: Initial JSON Structuring**
     - Convert extracted text into a structured JSON.
+
 
     **Step 3: Data Merging & Cleaning**
     - Use "Intake Form Data" as the source of truth for personal details.
     - Use "Formatting Rules" to add required fields (e.g., "Non Smoker") and remove forbidden fields (e.g., "Age").
+
 
     **Step 4: Strict Final Formatting**
     - Use the "Final CV Example" as a style guide.
@@ -145,6 +165,7 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
     - Responsibilities must be concise, action-oriented bullet points.
     - Job titles must be capitalized.
     - Add a 'meta' field with 'headerText' and 'footerText'.
+
 
     **CONTEXT DOCUMENTS:**
     ---
@@ -158,6 +179,7 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
     ${contextData.finalCvExampleText}
     ---
 
+
     **Final JSON Output Structure:**
     {
       "photoFound": boolean,
@@ -169,8 +191,10 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
       "meta": { "headerText": "", "footerText": "" }
     }
 
+
     Now, process the provided document and return ONLY the final, clean JSON object.
     `;
+
 
     const requestBody = {
         contents: [{
@@ -187,7 +211,9 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
         ]
     };
 
+
     const rawText = await callGeminiWithRetry(requestBody);
+
 
     try {
         const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/);
@@ -198,6 +224,7 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
     }
 }
 
+
 /**
  * Main orchestrator: Processes a CV using the unified agent.
  * @param {object} file - multer file object.
@@ -205,19 +232,23 @@ async function processCvWithUnifiedAgent(fileBuffer, mimeType) {
 async function parseAndFormatCV(file) {
     const cvBuffer = await fs.readFile(file.path);
 
+
     const finalCVJson = await processCvWithUnifiedAgent(cvBuffer, file.mimetype);
-    
+   
     let photoUrl = undefined;
     if (finalCVJson.photoFound && file.mimetype === 'application/pdf') {
         photoUrl = await extractAndUploadPhoto(cvBuffer);
     }
-    
+   
     finalCVJson.photoUrl = photoUrl || (finalCVJson.photoFound ? null : undefined);
-    
+   
     const originalText = "Original text is now processed and structured in a single step.";
+
 
     await fs.unlink(file.path);
     return { formattedCV: finalCVJson, originalText };
 }
 
+
 module.exports = { parseAndFormatCV };
+
