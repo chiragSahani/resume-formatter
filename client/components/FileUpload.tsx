@@ -2,10 +2,16 @@
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion } from 'framer-motion';
-import { Upload, FileText, X, AlertCircle, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Upload, 
+  FileText, 
+  X, 
+  Brain
+} from 'lucide-react';
 import { CVData } from '@/types/cv';
 import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from './LoadingSpinner'; // Import the separate component
 
 interface FileUploadProps {
   onFileProcessed: (cvData: CVData, originalText?: string) => void;
@@ -30,7 +36,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       const file = acceptedFiles[0];
       setSelectedFile(file);
     }
-  }, []);
+  }, [toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -88,96 +94,111 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-12">
-      <motion.div
-        {...getRootProps()}
-        className={`
-          relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300
-          bg-card shadow-lg
-          ${isDragActive 
-            ? 'border-primary' 
-            : 'border-muted hover:border-primary/80'
-          }
-        `}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
-        <input {...getInputProps()} />
-      
-        <div className="space-y-4">
-          <motion.div
-            className="mx-auto w-16 h-16 rounded-full flex items-center justify-center bg-muted"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+    <>
+      {/* AI Loading Spinner Overlay */}
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div 
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Upload className={`h-8 w-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+            <LoadingSpinner />
           </motion.div>
-          
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-1">
-              {isDragActive ? 'Drop your CV here!' : 'Upload Your CV'}
-            </h3>
-            <p className="text-muted-foreground mb-2">
-              Drag & drop, or click to browse
-            </p>
-            <p className="text-xs text-muted-foreground/80">
-              Supports PDF, DOCX, JPG, PNG • Max 10MB
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        )}
+      </AnimatePresence>
 
-      
-
-      {selectedFile && (
+      <div className="max-w-2xl mx-auto py-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 p-6 bg-card border border-muted rounded-xl shadow-lg"
+          {...getRootProps()}
+          className={`
+            relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300
+            bg-card shadow-lg
+            ${isDragActive 
+              ? 'border-primary' 
+              : 'border-muted hover:border-primary/80'
+            }
+          `}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              <div className="bg-primary/10 p-3 rounded-lg">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">{selectedFile.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
-            </div>
-            <motion.button
-              onClick={removeFile}
-              className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+          <input {...getInputProps()} />
+        
+          <div className="space-y-4">
+            <motion.div
+              className="mx-auto w-16 h-16 rounded-full flex items-center justify-center bg-muted"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
             >
-              <X className="h-5 w-5" />
-            </motion.button>
+              <Upload className={`h-8 w-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+            </motion.div>
+            
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-1">
+                {isDragActive ? 'Drop your CV here!' : 'Upload Your CV'}
+              </h3>
+              <p className="text-muted-foreground mb-2">
+                Drag & drop, or click to browse
+              </p>
+              <p className="text-xs text-muted-foreground/80">
+                Supports PDF, DOCX, JPG, PNG • Max 10MB
+              </p>
+            </div>
           </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleUpload}
-            disabled={isUploading}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all duration-300
-                       bg-primary text-primary-foreground shadow-lg hover:bg-primary/90
-                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Processing with AI...</span>
-              </>
-            ) : (
-              <span>Process CV</span>
-            )}
-          </motion.button>
         </motion.div>
-      )}
-    </div>
+
+        {selectedFile && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 p-6 bg-card border border-muted rounded-xl shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                onClick={removeFile}
+                className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="h-5 w-5" />
+              </motion.button>
+            </div>
+            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleUpload}
+              disabled={isUploading}
+              className="w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all duration-300
+                         bg-primary text-primary-foreground shadow-lg hover:bg-primary/90
+                         disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+            >
+              {isUploading ? (
+                <div className="flex items-center space-x-3">
+                  <Brain className="h-6 w-6 animate-pulse" />
+                  <span>AI Processing in Progress...</span>
+                </div>
+              ) : (
+                <span>Process CV with AI</span>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
+      </div>
+    </>
   );
 }

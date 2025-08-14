@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CVData, ExperienceItem, EducationItem } from '@/types/cv';
 import CVDisplay from './CVDisplay';
 import ExportCV from './ExportCV';
@@ -8,6 +8,9 @@ import CVActions from './CVActions';
 import OriginalTextView from './OriginalTextView';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from './ui/button';
+import { Save, Loader2 } from 'lucide-react';
 
 interface CVPreviewProps {
   cvData: CVData;
@@ -18,69 +21,102 @@ interface CVPreviewProps {
 export default function CVPreview({ cvData: initialCvData, originalText, onUploadNew }: CVPreviewProps) {
   const [cvData, setCvData] = useState<CVData>(initialCvData);
   const [showExport, setShowExport] = useState(false);
-  const [showOriginal, setShowOriginal] = useState(false); // State to toggle original text view
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const cvDisplayRef = useRef<HTMLDivElement>(null);
-  
-  // --- STATE UPDATE HANDLERS ---
 
+  // Sync state if the initial prop changes
+  useEffect(() => {
+    setCvData(initialCvData);
+  }, [initialCvData]);
+
+  // --- STATE UPDATE HANDLERS ---
   const handleUpdate = (field: keyof CVData, value: any) => {
     setCvData(prev => ({ ...prev, [field]: value }));
   };
-  
+
   const handleHeaderUpdate = (headerField: keyof CVData['header'], value: string) => {
     setCvData(prev => ({
       ...prev,
       header: { ...prev.header, [headerField]: value }
     }));
   };
-  
+
   const onExperienceUpdate = (index: number, field: keyof ExperienceItem, value: string | string[]) => {
-      const newExperience = [...cvData.experience];
-      (newExperience[index] as any)[field] = value;
-      setCvData(prev => ({ ...prev, experience: newExperience }));
+    const newExperience = [...cvData.experience];
+    (newExperience[index] as any)[field] = value;
+    setCvData(prev => ({ ...prev, experience: newExperience }));
   };
 
   const onEducationUpdate = (index: number, field: keyof EducationItem, value: string) => {
-      const newEducation = [...cvData.education];
-      (newEducation[index] as any)[field] = value;
-      setCvData(prev => ({ ...prev, education: newEducation }));
+    const newEducation = [...cvData.education];
+    (newEducation[index] as any)[field] = value;
+    setCvData(prev => ({ ...prev, education: newEducation }));
   };
-  
+
   const onSkillsUpdate = (index: number, value: string) => {
-      const newSkills = [...cvData.skills];
-      newSkills[index] = value;
-      setCvData(prev => ({ ...prev, skills: newSkills }));
+    const newSkills = [...cvData.skills];
+    newSkills[index] = value;
+    setCvData(prev => ({ ...prev, skills: newSkills }));
   };
 
+  // --- SAVE and EXPORT HANDLERS ---
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`https://resume-formatter-7rc4.onrender.com/api/cv/${cvData._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cvData),
+      });
 
-  // --- PDF EXPORT FUNCTION ---
+      if (!res.ok) throw new Error('Failed to save changes.');
+
+      toast({
+        title: 'Success!',
+        description: 'Your changes have been saved.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error',
+        description: 'Could not save changes. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleVisualPdfExport = async () => {
-    if (cvDisplayRef.current) {
-      setShowExport(false);
-      const input = cvDisplayRef.current;
-      const canvas = await html2canvas(input, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
+    if (!cvDisplayRef.current) return;
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+    setShowExport(false); // Close the modal before processing
+    toast({ title: 'Generating PDF...', description: 'Please wait a moment.' });
+    
+    const input = cvDisplayRef.current;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
 
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgWidth = 210;
+    const pageHeight = 297;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      pdf.save(`${cvData.header.name.replace(/\s+/g, '_')}_Visual_CV.pdf`);
     }
+    pdf.save(`${cvData.header.name.replace(/\s+/g, '_')}_Visual_CV.pdf`);
   };
 
   return (
@@ -89,17 +125,25 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
       <div className="bg-card border border-muted rounded-lg p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">
-              {cvData.header.name}
-            </h2>
+            <h2 className="text-2xl font-bold text-foreground">{cvData.header.name}</h2>
             <p className="text-muted-foreground">{cvData.header.title}</p>
           </div>
-          <CVActions 
-            onExport={() => setShowExport(true)} 
-            onUploadNew={onUploadNew} 
-            onToggleOriginal={() => setShowOriginal(!showOriginal)}
-            isOriginalVisible={showOriginal}
-          />
+          <div className="flex items-center space-x-2">
+            <CVActions
+              onExport={() => setShowExport(true)}
+              onUploadNew={onUploadNew}
+              onToggleOriginal={() => setShowOriginal(!showOriginal)}
+              isOriginalVisible={showOriginal}
+            />
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save Changes
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -108,9 +152,9 @@ export default function CVPreview({ cvData: initialCvData, originalText, onUploa
         {showOriginal && originalText ? (
           <OriginalTextView text={originalText} />
         ) : (
-          <CVDisplay 
-            cvData={cvData} 
-            ref={cvDisplayRef} 
+          <CVDisplay
+            cvData={cvData}
+            ref={cvDisplayRef}
             onUpdate={handleUpdate}
             onHeaderUpdate={handleHeaderUpdate}
             onExperienceUpdate={onExperienceUpdate}
